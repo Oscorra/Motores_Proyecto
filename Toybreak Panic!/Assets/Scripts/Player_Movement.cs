@@ -8,20 +8,33 @@ public class Player_Movement : MonoBehaviour
     private Rigidbody rb_Jugador;
 
     public float multiplicadorDesplazamiento = 8.0f;
-    public float fuerzaSalto = 5.0f;
     public Transform cameraTransform;
+
+    private Animator move;
+
     public float inputX { get; private set; }
     public float inputZ { get; private set; }
     private Vector3 direccionMovimiento;
+
+    [Header("Salto")]
+    public float fuerzaSalto = 6.0f;
+    public float distanciaChequeoSuelo = 0.2f;
+    public LayerMask capaSuelo;
+
+    private bool estaEnSuelo;
+    private bool saltoPendiente;
+    private bool saltoRealizado;
 
     void Start()
     {
         m_Renderer_Jugador = GetComponent<MeshRenderer>();
         rb_Jugador = GetComponent<Rigidbody>();
+        move = GetComponent<Animator>();
     }
 
     void Update()
     {
+        // Movimiento
         inputX = Input.GetAxis("Horizontal");
         inputZ = Input.GetAxis("Vertical");
 
@@ -35,15 +48,27 @@ public class Player_Movement : MonoBehaviour
 
         direccionMovimiento = (camForward * inputZ + camRight * inputX);
 
-        if (Input.GetKeyDown(KeyCode.Space) && EstaEnSuelo())
+        // Chequeo de suelo
+        estaEnSuelo = Physics.Raycast(transform.position, Vector3.down, distanciaChequeoSuelo, capaSuelo);
+
+        // Saltar
+        if (Input.GetKeyDown(KeyCode.Space) && estaEnSuelo)
         {
-            rb_Jugador.AddForce(Vector3.up * fuerzaSalto, ForceMode.Impulse);
+            saltoPendiente = true;
+            saltoRealizado = true; // Esto indica que el salto fue intencional
         }
+
+        // Enviar par�metros al Animator
+        estaEnSuelo = Physics.Raycast(transform.position, Vector3.down, 0.2f, capaSuelo);
+        move.SetBool("IsGrounded", estaEnSuelo);
+        move.SetFloat("VerticalVelocity", rb_Jugador.linearVelocity.y);
+        move.SetBool("JumpPressed", saltoRealizado);
     }
 
     void FixedUpdate()
     {
-        if (direccionMovimiento.sqrMagnitude > 0.1)
+        // Movimiento
+        if (direccionMovimiento.sqrMagnitude > 0.1f)
         {
             direccionMovimiento.Normalize();
             Quaternion rotacionObjetivo = Quaternion.LookRotation(direccionMovimiento, Vector3.up);
@@ -53,11 +78,29 @@ public class Player_Movement : MonoBehaviour
             rb_Jugador.MovePosition(direccion);
         }
 
-        Vector3 movimientoLocal = transform.InverseTransformDirection(direccionMovimiento);
-    }
+        // Aplicar salto
+        if (saltoPendiente)
+        {
+            rb_Jugador.AddForce(Vector3.up * fuerzaSalto, ForceMode.Impulse);
+            saltoPendiente = false;
+        }
 
-    bool EstaEnSuelo()
-    {
-        return Physics.Raycast(transform.position, Vector3.down, 1.1f);
+        // Si est� cayendo y no salt� ? ca�da libre
+        if (!estaEnSuelo && rb_Jugador.linearVelocity.y < 0 && !saltoRealizado)
+        {
+            move.SetBool("JumpPressed", false);
+        }
+
+        // Si aterriza ? resetear salto
+        if (estaEnSuelo && saltoRealizado)
+        {
+            saltoRealizado = false;
+            move.SetTrigger("Landing");
+        }
+
+        // Movimiento local para el blend tree de caminar/correr
+        Vector3 movimientoLocal = transform.InverseTransformDirection(direccionMovimiento);
+        move.SetFloat("VelZ", movimientoLocal.z);
+        move.SetFloat("VelX", movimientoLocal.x);
     }
 }
