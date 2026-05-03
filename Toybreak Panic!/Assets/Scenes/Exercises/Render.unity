@@ -717,6 +717,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1589416135}
   - component: {fileID: 1589416136}
+  - component: {fileID: 1589416137}
+  - component: {fileID: 1589416138}
   m_Layer: 0
   m_Name: Objects
   m_TagString: Untagged
@@ -768,7 +770,40 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 4e8d5c685a1ddd64b931f853c7123e94, type: 2}
   - {fileID: 2100000, guid: 911a885c5ce3f9e41a4890a0a9acfc26, type: 2}
   - {fileID: 2100000, guid: 969eb1cba9066734a932d3d19b72dec7, type: 2}
+  - {fileID: 2100000, guid: 0883bda9f9a1f9a429734ea8424c7f65, type: 2}
   selectedYOffset: 0.25
+--- !u!114 &1589416137
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1589416134}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88f9dfe95a61ce44091898faf90855be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RenderingDebugHUD
+  selector: {fileID: 0}
+  colorAnimator: {fileID: 0}
+  showDebugHUD: 1
+--- !u!114 &1589416138
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1589416134}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1beadaff51555624994eb5c56ef380a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SelectedObjectColorAnimator
+  selector: {fileID: 0}
+  startColor: {r: 1, g: 1, b: 1, a: 1}
+  endColor: {r: 1, g: 0, b: 0, a: 1}
+  lerpDuration: 1.5
+  toggleKey: 32
 --- !u!1 &1627980928
 GameObject:
   m_ObjectHideFlags: 0

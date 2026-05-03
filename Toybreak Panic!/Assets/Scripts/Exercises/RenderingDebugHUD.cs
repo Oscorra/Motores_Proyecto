@@ -78,20 +78,20 @@ public class RenderingDebugHUD : MonoBehaviour
         int padding = Mathf.Clamp(Mathf.RoundToInt(Screen.height * 0.012f), 6, 12);
         hudBoxStyle.padding = new RectOffset(padding, padding, padding, padding);
 
-        hudTitleStyle.fontSize = Mathf.Clamp(Mathf.RoundToInt(Screen.height * 0.024f), 9, 15);
+        hudTitleStyle.fontSize = Mathf.Clamp(Mathf.RoundToInt(Screen.height * 0.03f), 16, 24);
         hudTitleStyle.fontStyle = FontStyle.Bold;
         hudTitleStyle.margin = new RectOffset(0, 0, 0, 4);
         hudTitleStyle.normal.textColor = Color.white;
 
-        hudSectionStyle.fontSize = Mathf.Clamp(Mathf.RoundToInt(Screen.height * 0.02f), 8, 12);
+        hudSectionStyle.fontSize = Mathf.Clamp(Mathf.RoundToInt(Screen.height * 0.025f), 14, 20);
         hudSectionStyle.fontStyle = FontStyle.Bold;
         hudSectionStyle.margin = new RectOffset(0, 0, 2, 1);
         hudSectionStyle.normal.textColor = new Color(1f, 0.9f, 0.5f);
 
-        hudLabelStyle.fontSize = Mathf.Clamp(Mathf.RoundToInt(Screen.height * 0.016f), 7, 11);
+        hudLabelStyle.fontSize = Mathf.Clamp(Mathf.RoundToInt(Screen.height * 0.02f), 12, 18);
         hudLabelStyle.margin = new RectOffset(0, 0, 0, 0);
         hudLabelStyle.wordWrap = false;
-        hudLabelStyle.clipping = TextClipping.Clip;
+        hudLabelStyle.clipping = TextClipping.Overflow;
         hudLabelStyle.normal.textColor = Color.white;
     }
 
@@ -99,9 +99,9 @@ public class RenderingDebugHUD : MonoBehaviour
     {
         float margin = Mathf.Clamp(Screen.width * 0.015f, 6f, 16f);
         float minWidth = Mathf.Min(220f, Screen.width * 0.55f);
-        float width = Mathf.Clamp(Screen.width * 0.36f, minWidth, 520f);
+        float width = Mathf.Clamp(Screen.width * 0.15f, minWidth, 520f);
         float minHeight = Mathf.Min(180f, Screen.height * 0.4f);
-        float height = Mathf.Clamp(Screen.height * 0.48f, minHeight, 420f);
+        float height = Mathf.Clamp(Screen.height * 0.6f, minHeight, 420f);
 
         width = Mathf.Min(width, Screen.width - margin * 2f);
         height = Mathf.Min(height, Screen.height - margin * 2f);
