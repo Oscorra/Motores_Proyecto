@@ -9757,6 +9757,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player_Movement
   multiplicadorDesplazamiento: 8
+  multiplicadorSprint: 1.5
+  multiplicadorAnimacion: 1.4
   cameraTransform: {fileID: 460950028}
   fuerzaSalto: 6
   distanciaChequeoSuelo: 0.2

@@ -8,6 +8,8 @@ public class Player_Movement : MonoBehaviour
     private Rigidbody rb_Jugador;
 
     public float multiplicadorDesplazamiento = 8.0f;
+    public float multiplicadorSprint = 1.8f;    // Cuanto más rápido corre físicamente
+    public float multiplicadorAnimacion = 1.4f; // Cuanto más rápido se mueve la animación
     public Transform cameraTransform;
 
     private Animator move;
@@ -29,6 +31,8 @@ public class Player_Movement : MonoBehaviour
     private bool saltoPendiente;
     private bool saltoRealizado;
     private bool jetpackActivo;
+    private bool sprintActivo;
+
 
     void Start()
     {
@@ -72,27 +76,52 @@ public class Player_Movement : MonoBehaviour
         // Jetpack
         jetpackActivo = Input.GetKey(KeyCode.LeftShift);
 
+        sprintActivo = Input.GetKey(KeyCode.LeftControl) && estaEnSuelo && direccionMovimiento.sqrMagnitude > 0.1f;
+
         // Enviar parametros al Animator
         // IsGrounded = false mientras saltoRealizado=true o jetpack activo
         move.SetBool("IsGrounded", estaEnSuelo && !saltoRealizado && !jetpackActivo);
         move.SetFloat("VerticalVelocity", rb_Jugador.linearVelocity.y);
         move.SetBool("JumpPressed", saltoRealizado);
         move.SetBool("Jetpack", jetpackActivo);
+        move.SetBool("IsRunning", sprintActivo);
 
         jetpackParticulas?.SetActivo(jetpackActivo);
     }
 
     void FixedUpdate()
     {
+        //float mFisico = sprintActivo ? multiplicadorSprint : 1.0f;
+        float mFisico = (Input.GetKey(KeyCode.LeftControl) && estaEnSuelo) ? multiplicadorSprint : 1.0f;
+
         // Movimiento
         if (direccionMovimiento.sqrMagnitude > 0.1f)
         {
+            /*
             direccionMovimiento.Normalize();
+
             Quaternion rotacionObjetivo = Quaternion.LookRotation(direccionMovimiento, Vector3.up);
+
             transform.rotation = Quaternion.Slerp(transform.rotation, rotacionObjetivo, 0.2f);
 
+
+
             Vector3 direccion = rb_Jugador.position + direccionMovimiento * multiplicadorDesplazamiento * Time.fixedDeltaTime;
+
             rb_Jugador.MovePosition(direccion);
+            */
+            // IMPORTANTE: Primero normalizamos para tener dirección pura
+
+            if (direccionMovimiento.sqrMagnitude > 0.1f)
+            {
+                direccionMovimiento.Normalize();
+                Quaternion rotacionObjetivo = Quaternion.LookRotation(direccionMovimiento, Vector3.up);
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotacionObjetivo, 0.2f);
+
+                // Mover al personaje
+                Vector3 direccion = rb_Jugador.position + direccionMovimiento * (multiplicadorDesplazamiento * mFisico) * Time.fixedDeltaTime;
+                rb_Jugador.MovePosition(direccion);
+            }
         }
 
         // Aplicar salto
@@ -123,9 +152,21 @@ public class Player_Movement : MonoBehaviour
             move.SetTrigger("Landing");
         }
 
-        // Movimiento local para el blend tree de caminar/correr
+        //Movimiento local para el blend tree de caminar/correr
         Vector3 movimientoLocal = transform.InverseTransformDirection(direccionMovimiento);
         move.SetFloat("VelZ", movimientoLocal.z);
         move.SetFloat("VelX", movimientoLocal.x);
+        
+
+        /* Enviamos el multiplicador al Animator (Asegúrate de crear el parámetro "AnimSpeedMultiplier")
+        if (move != null)
+        {
+            Vector3 movimientoLocal = transform.InverseTransformDirection(direccionMovimiento);
+
+            // Al multiplicar VelZ y VelX por mFisico, el valor sube de 1 a 1.5
+            // Esto hará que el Blend Tree se desplace hacia la animación de correr
+            move.SetFloat("VelZ", movimientoLocal.z * mFisico);
+            move.SetFloat("VelX", movimientoLocal.x * mFisico);
+        }*/
     }
 }
