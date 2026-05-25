@@ -73,8 +73,8 @@ public class Player_Movement : MonoBehaviour
             saltoRealizado = true;
         }
 
-        // Jetpack
-        jetpackActivo = Input.GetKey(KeyCode.LeftShift);
+        // Jetpack: solo responde si el jugador lo tiene desbloqueado
+        jetpackActivo = Input.GetKey(KeyCode.LeftShift) && GameProgress.Instance.TieneJetpack;
 
         sprintActivo = Input.GetKey(KeyCode.LeftControl) && estaEnSuelo && direccionMovimiento.sqrMagnitude > 0.1f;
 
