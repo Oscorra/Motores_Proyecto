@@ -12,7 +12,7 @@ public class DungeonComplete : MonoBehaviour
     public string escenaSelector = "Level Selector";
 
     [TextArea]
-    public string mensaje = "Level 1 Completed, Here you have a Jetpack, you'll need it for the next level, good luck!";
+    public string mensaje = "Level 1 Completed, Here you have a Blaster, now you can aim and shoot, good luck!";
 
     private bool yaActivado;
 
@@ -27,7 +27,7 @@ public class DungeonComplete : MonoBehaviour
         if (!other.CompareTag(tagJugador)) return;
 
         yaActivado = true;
-        GameProgress.Instance.DesbloquearJetpack();
+        GameProgress.Instance.DesbloquearLaser();
         GameProgress.Instance.EncolarMensaje(mensaje);
         GameProgress.Instance.EncolarSpawn("PostDungeon");
         SceneManager.LoadScene(escenaSelector);

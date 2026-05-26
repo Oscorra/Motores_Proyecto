@@ -7,7 +7,7 @@ public class MenuInicio : MonoBehaviour
 
     public void Jugar()
     {
-        SceneManager.LoadScene("Dungeon");
+        SceneManager.LoadScene("Level Selector");
     }
 
     public void MostrarControles()
