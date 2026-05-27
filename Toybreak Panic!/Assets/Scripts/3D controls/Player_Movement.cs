@@ -27,6 +27,16 @@ public class Player_Movement : MonoBehaviour
     public float velocidadJetpack = 5.0f;
     public JetpackParticulas jetpackParticulas;
 
+    [Header("Hielo")]
+    public PhysicsMaterial materialHielo;
+    private float friccionActual = 1f;
+    private float friccionObjetivo = 1f;
+
+    [Header("Hielo")]
+    private Vector3 rayOrigen;
+    private float rayLongitud;
+    private int layerMask;
+
     private bool estaEnSuelo;
     private bool saltoPendiente;
     private bool saltoRealizado;
@@ -93,6 +103,17 @@ public class Player_Movement : MonoBehaviour
     {
         //float mFisico = sprintActivo ? multiplicadorSprint : 1.0f;
         float mFisico = (Input.GetKey(KeyCode.LeftControl) && estaEnSuelo) ? multiplicadorSprint : 1.0f;
+        // Detectar si está en hielo
+        RaycastHit hit;
+        if (Physics.Raycast(rayOrigen, Vector3.down, out hit, rayLongitud, layerMask))
+        {
+            if (hit.collider.sharedMaterial == materialHielo)
+                friccionObjetivo = 0.05f;
+            else
+                friccionObjetivo = 1f;
+        }
+
+        friccionActual = Mathf.Lerp(friccionActual, friccionObjetivo, Time.fixedDeltaTime * 3f);
 
         // Movimiento
         if (direccionMovimiento.sqrMagnitude > 0.1f)
