@@ -19,11 +19,19 @@ public class PlayerHealth : MonoBehaviour
     public float fadeSpeed;
 
     private float durationTimer;
+
+    private Vector3 puntoInicial;
+    private Quaternion rotacionInicial;
+    private CharacterController controller;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         health = maxHealth;
         overlay.color = new Color(overlay.color.r, overlay.color.g, overlay.color.b, 0);
+        puntoInicial = transform.position;
+        rotacionInicial = transform.rotation;
+        controller = GetComponent<CharacterController>();
     }
 
     // Update is called once per frame
@@ -76,6 +84,22 @@ public class PlayerHealth : MonoBehaviour
         lerpTimer = 0f;
         durationTimer = 0;
         overlay.color = new Color(overlay.color.r, overlay.color.g, overlay.color.b, 0.7f);
+
+        if (health <= 0)
+            Morir();
+    }
+
+    private void Morir()
+    {
+        // Reaparece en el punto inicial del dungeon con la vida completa.
+        // El CharacterController hay que desactivarlo para teletransportar sin que pelee.
+        if (controller != null) controller.enabled = false;
+        transform.position = puntoInicial;
+        transform.rotation = rotacionInicial;
+        if (controller != null) controller.enabled = true;
+
+        health = maxHealth;
+        lerpTimer = 0f;
     }
 
     public void RestoreHealth(float healAmount) 

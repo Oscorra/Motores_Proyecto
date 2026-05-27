@@ -12,6 +12,11 @@ public class Player_Movement : MonoBehaviour
     public float multiplicadorAnimacion = 1.4f; // Cuanto más rápido se mueve la animación
     public Transform cameraTransform;
 
+    [Header("Movimiento lateral 2D")]
+    public bool movimientoLateral2D = false;
+    public bool bloquearProfundidadEn2D = true;
+    public float profundidad2D = 0f;
+
     private Animator move;
 
     public float inputX { get; private set; }
@@ -49,6 +54,7 @@ public class Player_Movement : MonoBehaviour
         m_Renderer_Jugador = GetComponent<MeshRenderer>();
         rb_Jugador = GetComponent<Rigidbody>();
         move = GetComponent<Animator>();
+        profundidad2D = transform.position.z;
 
     }
 
@@ -58,21 +64,28 @@ public class Player_Movement : MonoBehaviour
         inputX = Input.GetAxis("Horizontal");
         inputZ = Input.GetAxis("Vertical");
 
-        Vector3 camForward = cameraTransform.forward;
-        camForward.y = 0;
-        camForward.Normalize();
+        if (movimientoLateral2D)
+        {
+            direccionMovimiento = Vector3.right * inputX;
+        }
+        else
+        {
+            Vector3 camForward = cameraTransform != null ? cameraTransform.forward : Vector3.forward;
+            camForward.y = 0;
+            camForward.Normalize();
 
-        Vector3 camRight = cameraTransform.right;
-        camRight.y = 0;
-        camRight.Normalize();
+            Vector3 camRight = cameraTransform != null ? cameraTransform.right : Vector3.right;
+            camRight.y = 0;
+            camRight.Normalize();
 
-        direccionMovimiento = (camForward * inputZ + camRight * inputX);
+            direccionMovimiento = (camForward * inputZ + camRight * inputX);
+        }
 
         // Chequeo de suelo: offset 0.1f arriba para evitar imprecision cuando el pivot esta al ras del suelo
         // Si capaSuelo no esta configurado en el Inspector, usa todas las capas
-        int layerMask = (capaSuelo.value != 0) ? (int)capaSuelo : Physics.DefaultRaycastLayers;
-        Vector3 rayOrigen = transform.position + Vector3.up * 0.1f;
-        float rayLongitud = distanciaChequeoSuelo + 0.1f;
+        layerMask = (capaSuelo.value != 0) ? (int)capaSuelo : Physics.DefaultRaycastLayers;
+        rayOrigen = transform.position + Vector3.up * 0.1f;
+        rayLongitud = distanciaChequeoSuelo + 0.1f;
         estaEnSuelo = Physics.Raycast(rayOrigen, Vector3.down, rayLongitud, layerMask);
         Debug.DrawRay(rayOrigen, Vector3.down * rayLongitud, estaEnSuelo ? Color.green : Color.red);
 
@@ -136,11 +149,15 @@ public class Player_Movement : MonoBehaviour
             if (direccionMovimiento.sqrMagnitude > 0.1f)
             {
                 direccionMovimiento.Normalize();
-                Quaternion rotacionObjetivo = Quaternion.LookRotation(direccionMovimiento, Vector3.up);
+                Quaternion rotacionObjetivo = movimientoLateral2D
+                    ? Quaternion.Euler(0f, direccionMovimiento.x >= 0f ? 90f : -90f, 0f)
+                    : Quaternion.LookRotation(direccionMovimiento, Vector3.up);
                 transform.rotation = Quaternion.Slerp(transform.rotation, rotacionObjetivo, 0.2f);
 
                 // Mover al personaje
                 Vector3 direccion = rb_Jugador.position + direccionMovimiento * (multiplicadorDesplazamiento * mFisico) * Time.fixedDeltaTime;
+                if (movimientoLateral2D && bloquearProfundidadEn2D)
+                    direccion.z = profundidad2D;
                 rb_Jugador.MovePosition(direccion);
             }
         }

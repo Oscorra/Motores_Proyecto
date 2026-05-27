@@ -22,8 +22,8 @@ public class WeaponController : MonoBehaviour
     [Tooltip("Largo del brazo al extenderse para apuntar.")]
     public float largoBrazo = 0.55f;
     [Range(0f, 1f)] public float pesoIK = 1f;
-    [Tooltip("Suavizado del giro del personaje al apuntar.")]
-    public float velocidadGiro = 18f;
+    [Tooltip("En el selector 2D el blaster solo apunta a izquierda/derecha en el eje X global.")]
+    public bool apuntarSoloEjeXGlobal = true;
 
     [Header("Disparo")]
     public float cadencia = 0.18f;
@@ -56,16 +56,7 @@ public class WeaponController : MonoBehaviour
 
         if (!tieneLaser) { apuntando = false; return; }
 
-        var cam = Camera.main;
-        if (cam == null) return;
-
-        // Proyectar el cursor sobre el plano de juego (Z = planoZ)
-        Ray ray = cam.ScreenPointToRay(Input.mousePosition);
-        if (Mathf.Abs(ray.direction.z) > 0.0001f)
-        {
-            float t = (planoZ - ray.origin.z) / ray.direction.z;
-            if (t > 0f) objetivoMundo = ray.origin + ray.direction * t;
-        }
+        objetivoMundo = GetObjetivoApuntado();
 
         apuntando = Input.GetMouseButton(1);
 
@@ -77,17 +68,10 @@ public class WeaponController : MonoBehaviour
     {
         if (!tieneLaser || !apuntando || arma == null) return;
 
-        // Mirar hacia el lado del cursor (izquierda/derecha) en la vista lateral
-        float dx = objetivoMundo.x - transform.position.x;
-        if (Mathf.Abs(dx) > 0.05f)
-        {
-            Quaternion objetivo = Quaternion.Euler(0f, dx >= 0f ? 90f : -90f, 0f);
-            transform.rotation = Quaternion.Slerp(transform.rotation, objetivo, velocidadGiro * Time.deltaTime);
-        }
-
-        // Orientar el arma: el canon (+Z) apunta al objetivo. Se fija la rotacion
-        // mundial directamente (tras el IK) para evitar el offset del rig de la mano.
-        Vector3 dir = objetivoMundo - arma.position;
+        // El canon se inclina en el plano XY, pero su X siempre queda hacia el lado
+        // al que ya mira el jugador. El cursor solo aporta altura/inclinacion.
+        Vector3 dir = GetDireccionDisparo();
+        dir.z = 0f;
         if (dir.sqrMagnitude > 0.0001f)
             arma.rotation = Quaternion.LookRotation(dir.normalized, Vector3.up);
     }
@@ -96,10 +80,12 @@ public class WeaponController : MonoBehaviour
     {
         if (!tieneLaser || !apuntando || arma == null || hombroDer == null) return;
 
-        // El brazo derecho se extiende desde el hombro hacia el objetivo
-        Vector3 dir = objetivoMundo - hombroDer.position;
+        // El brazo derecho se extiende hacia el lado al que ya mira el jugador.
+        Vector3 dir = GetDireccionDisparo();
+        dir.z = 0f;
         if (dir.sqrMagnitude < 0.0001f) return;
         Vector3 manoPos = hombroDer.position + dir.normalized * largoBrazo;
+        manoPos.z = planoZ;
         anim.SetIKPositionWeight(AvatarIKGoal.RightHand, pesoIK);
         anim.SetIKPosition(AvatarIKGoal.RightHand, manoPos);
     }
@@ -109,21 +95,59 @@ public class WeaponController : MonoBehaviour
         proximoDisparo = Time.time + cadencia;
 
         Vector3 origen = muzzle != null ? muzzle.position : transform.position;
-        Vector3 dir = objetivoMundo - origen;
-        dir.z = 0f;
-        if (dir.sqrMagnitude < 0.0001f) dir = transform.forward;
+        origen.z = planoZ;
+        Vector3 dir = GetDireccionDisparo();
         dir.Normalize();
 
         Vector3 fin = origen + dir * alcance;
+        fin.z = planoZ;
         RaycastHit hit;
         if (Physics.SphereCast(origen, radioDisparo, dir, out hit, alcance, capasImpacto, QueryTriggerInteraction.Collide))
         {
             fin = hit.point;
+            fin.z = planoZ;
             var goblin = hit.collider.GetComponentInParent<GoblinTarget>();
             if (goblin != null) goblin.Impacto();
         }
 
         StartCoroutine(EfectoDisparo(origen, fin));
+    }
+
+    private Vector3 GetObjetivoApuntado()
+    {
+        var cam = Camera.main;
+        if (cam == null) return objetivoMundo;
+
+        Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+        if (Mathf.Abs(ray.direction.z) <= 0.0001f) return objetivoMundo;
+
+        float t = (planoZ - ray.origin.z) / ray.direction.z;
+        return t > 0f ? ray.origin + ray.direction * t : objetivoMundo;
+    }
+
+    private Vector3 GetDireccionDisparo()
+    {
+        if (!apuntarSoloEjeXGlobal)
+        {
+            Vector3 dir = objetivoMundo - (muzzle != null ? muzzle.position : transform.position);
+            dir.z = 0f;
+            return dir.sqrMagnitude > 0.0001f ? dir.normalized : transform.forward;
+        }
+
+        Vector3 origen = muzzle != null ? muzzle.position : transform.position;
+        origen.z = planoZ;
+
+        float lado = transform.forward.x >= 0f ? 1f : -1f;
+        float distanciaHorizontal = Mathf.Abs(objetivoMundo.x - origen.x);
+        distanciaHorizontal = Mathf.Max(distanciaHorizontal, 0.25f);
+
+        Vector3 objetivoBloqueado = objetivoMundo;
+        objetivoBloqueado.x = origen.x + distanciaHorizontal * lado;
+        objetivoBloqueado.z = planoZ;
+
+        Vector3 direccion = objetivoBloqueado - origen;
+        direccion.z = 0f;
+        return direccion.sqrMagnitude > 0.0001f ? direccion.normalized : (lado > 0f ? Vector3.right : Vector3.left);
     }
 
     private IEnumerator EfectoDisparo(Vector3 origen, Vector3 fin)

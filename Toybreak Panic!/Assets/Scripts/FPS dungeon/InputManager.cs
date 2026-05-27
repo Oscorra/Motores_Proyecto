@@ -21,6 +21,15 @@ public class InputManager : MonoBehaviour
         onFoot.Jump.performed += ctx => motor.Jump();
     }
 
+    void Update()
+    {
+        // Bloquea y oculta el cursor durante el juego; lo libera cuando el juego
+        // esta en pausa (Time.timeScale == 0) para poder usar el menu de pausa.
+        bool pausado = Time.timeScale == 0f;
+        Cursor.lockState = pausado ? CursorLockMode.None : CursorLockMode.Locked;
+        Cursor.visible = pausado;
+    }
+
     void FixedUpdate()
     {
         // Process the movement of the player
