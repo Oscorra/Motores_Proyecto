@@ -11,8 +11,12 @@ public class GoblinTarget : MonoBehaviour
 {
     [Header("Asomarse")]
     public Vector2 rangoAltura = new Vector2(1.2f, 4.2f);
-    public float tiempoVisible = 1.8f;
-    public float tiempoOculto = 0.8f;
+        [Tooltip("Tiempo visible: aleatorio entre min y max cada ciclo.")]
+    public Vector2 rangoTiempoVisible = new Vector2(0.7f, 1.8f);
+        [Tooltip("Tiempo oculto entre asomadas: aleatorio cada ciclo.")]
+    public Vector2 rangoTiempoOculto = new Vector2(0.5f, 1.8f);
+    [Tooltip("Retardo inicial aleatorio para desincronizar de los demas.")]
+    public Vector2 rangoRetardoInicial = new Vector2(0f, 1.6f);
     public float velocidadEscala = 8f;
 
     [Header("Efecto")]
@@ -53,6 +57,8 @@ public class GoblinTarget : MonoBehaviour
 
     private IEnumerator Ciclo()
     {
+        // Retardo inicial aleatorio: cada goblin arranca su ciclo por su cuenta
+        yield return new WaitForSeconds(Random.Range(rangoRetardoInicial.x, rangoRetardoInicial.y));
         while (vivo)
         {
             float y = Random.Range(rangoAltura.x, rangoAltura.y);
@@ -63,15 +69,16 @@ public class GoblinTarget : MonoBehaviour
             if (col != null) col.enabled = true;
             visible = true;
 
+            float visibleDur = Random.Range(rangoTiempoVisible.x, rangoTiempoVisible.y);
             float t = 0f;
-            while (t < tiempoVisible && vivo) { t += Time.deltaTime; yield return null; }
+            while (t < visibleDur && vivo) { t += Time.deltaTime; yield return null; }
             if (!vivo) yield break;
 
             visible = false;
             if (col != null) col.enabled = false;
             yield return EscalarA(Vector3.zero);
 
-            yield return new WaitForSeconds(tiempoOculto);
+            yield return new WaitForSeconds(Random.Range(rangoTiempoOculto.x, rangoTiempoOculto.y));
         }
     }
 

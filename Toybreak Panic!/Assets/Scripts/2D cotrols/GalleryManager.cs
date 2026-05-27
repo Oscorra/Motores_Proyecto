@@ -10,7 +10,12 @@ using UnityEngine;
 public class GalleryManager : MonoBehaviour
 {
     public GoblinTarget[] goblins;
-    public GameObject portalLevel2;
+        [Tooltip("Muro que bloquea el avance; baja al limpiar la galeria.")]
+    public Transform muro;
+    [Tooltip("Cuanto baja el muro (unidades).")]
+    public float muroBajada = 5f;
+    [Tooltip("Duracion de la bajada del muro.")]
+    public float muroDuracion = 1.2f;
     public string tagJugador = "Player";
     public bool requiereLaser = true;
 
@@ -24,7 +29,6 @@ public class GalleryManager : MonoBehaviour
 
     void Start()
     {
-        if (portalLevel2 != null) portalLevel2.SetActive(false);
         foreach (var g in goblins)
         {
             if (g == null) continue;
@@ -57,23 +61,25 @@ public class GalleryManager : MonoBehaviour
     public void GoblinEliminado()
     {
         vivos--;
-        if (vivos <= 0) StartCoroutine(AbrirPortal());
+        if (vivos <= 0) StartCoroutine(BajarMuro());
     }
 
-    private IEnumerator AbrirPortal()
+    private IEnumerator BajarMuro()
     {
-        if (portalLevel2 == null) yield break;
+        if (muro == null) yield break;
 
-        portalLevel2.SetActive(true);
-        Vector3 plena = portalLevel2.transform.localScale;
-        portalLevel2.transform.localScale = Vector3.zero;
+        Vector3 ini = muro.position;
+        Vector3 fin = ini + Vector3.down * muroBajada;
         float t = 0f;
-        while (t < 0.5f)
+        while (t < muroDuracion)
         {
             t += Time.deltaTime;
-            portalLevel2.transform.localScale = Vector3.Lerp(Vector3.zero, plena, t / 0.5f);
+            muro.position = Vector3.Lerp(ini, fin, t / muroDuracion);
             yield return null;
         }
-        portalLevel2.transform.localScale = plena;
+        muro.position = fin;
+
+        var c = muro.GetComponent<Collider>();
+        if (c != null) c.enabled = false;
     }
 }
